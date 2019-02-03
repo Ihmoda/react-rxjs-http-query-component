@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { PollInterval } from "./PollInterval";
+import { ReactPolling } from "./ReactPolling";
 import "./App.css";
 
 const apiUrl = "https://pokeapi.co/api/v2/pokemon/2/";
@@ -10,9 +10,8 @@ class App extends Component {
     super(props);
 
     this.state = {
-      name: "Bulbasaur",
-      imgUrl:
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png"
+      name: "No data yet! Start polling!",
+      imgUrl: ""
     };
   }
   _updatePokemon = data => {
@@ -26,8 +25,10 @@ class App extends Component {
     const { name, imgUrl } = this.state;
     return (
       <div>
-        <PollInterval>
-          {({ startPolling, stopPolling }) => {
+        <ReactPolling>
+          {({ startPolling, stopPolling, error, loading }) => {
+            if (error) return <h1>"Error!"</h1>;
+            if (loading) return <h1>"Loading..."</h1>;
             return (
               <div className="App">
                 <h1>Pokemon Poller</h1>
@@ -42,7 +43,7 @@ class App extends Component {
               </div>
             );
           }}
-        </PollInterval>
+        </ReactPolling>
       </div>
     );
   }

@@ -43,23 +43,6 @@ class App extends Component {
             );
           }}
         </PollInterval>
-        <PollInterval>
-          {({ startPolling, stopPolling }) => {
-            return (
-              <div className="App">
-                <h1>Pokemon Cycler</h1>
-                <button
-                  onClick={() => startPolling(apiUrl, this._updatePokemon)}
-                >
-                  Start Polling
-                </button>
-                <button onClick={stopPolling}>Stop Polling</button>
-                <h1>{name}</h1>
-                <img src={imgUrl} />
-              </div>
-            );
-          }}
-        </PollInterval>
       </div>
     );
   }

@@ -1,6 +1,12 @@
 import React, { Component } from "react";
-import { Subject, from, timer } from "rxjs";
-import { switchMap, takeUntil, filter } from "rxjs/operators";
+import { Subject, from, timer, of } from "rxjs";
+import {
+  switchMap,
+  takeUntil,
+  filter,
+  retry,
+  catchError
+} from "rxjs/operators";
 
 const STOP = "STOP";
 
@@ -20,11 +26,16 @@ export class PollInterval extends Component {
   }
 
   _startPolling = (url, subscriber, interval = 5000) => {
+    if (typeof subscriber !== "function") {
+      return;
+    }
     const { endObservable$ } = this.state;
     return timer(0, interval)
       .pipe(
         switchMap(() => this._requestData(url)),
-        takeUntil(endObservable$)
+        takeUntil(endObservable$),
+        catchError(val => of(`Error: ${val}`)),
+        retry(3)
       )
       .subscribe(subscriber);
   };

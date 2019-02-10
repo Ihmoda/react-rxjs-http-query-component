@@ -9,40 +9,55 @@ import {
   tap
 } from "rxjs/operators";
 
-const STOP = "STOP";
+const STOP_POLLING = "STOP_POLLING";
 
-export class ReactPolling extends Component {
+export class HttpQuery extends Component {
   constructor(props) {
     super(props);
     const subject = new Subject();
-    const endObservable$ = subject.pipe(filter(val => val === STOP));
+    const endObservable$ = subject.pipe(filter(val => val === STOP_POLLING));
     this.state = {
       endObservable$,
       error: false,
-      loading: false
+      loading: false,
+      data: null
     };
   }
 
-  _requestData(url) {
+  componentDidMount() {
+    this.setState(() => ({ loading: true }));
+    this._requestData().subscribe(this._updateData);
+  }
+
+  componentWillUnmount() {
+    this._stopPolling();
+  }
+
+  _requestData = () => {
+    const { url } = this.props;
     return from(fetch(url)).pipe(
       switchMap(data => data.json()),
       tap(() => {
         this.setState({ loading: false });
       })
     );
-  }
+  };
 
-  _startPolling = (url, subscriber, interval = 5000) => {
-    if (typeof subscriber !== "function") {
-      return;
-    }
+  _updateData = data => {
+    this.setState({
+      data: data
+    });
+  };
+
+  _startPolling = () => {
     const { endObservable$ } = this.state;
-    return timer(0, interval)
+    const { pollInterval = 5000 } = this.props;
+    return timer(0, pollInterval)
       .pipe(
         tap(() => {
           this.setState({ loading: true });
         }),
-        switchMap(() => this._requestData(url)),
+        switchMap(this._requestData),
         takeUntil(endObservable$),
         catchError(val => {
           this.setState({ error: true });
@@ -50,12 +65,12 @@ export class ReactPolling extends Component {
         }),
         retry(3)
       )
-      .subscribe(subscriber);
+      .subscribe(this._updateData);
   };
 
   _stopPolling = () => {
     const { endObservable$ } = this.state;
-    endObservable$.next(STOP);
+    endObservable$.next(STOP_POLLING);
   };
 
   render() {
@@ -65,7 +80,8 @@ export class ReactPolling extends Component {
           startPolling: this._startPolling,
           stopPolling: this._stopPolling,
           error: this.state.error,
-          loading: this.state.loading
+          loading: this.state.loading,
+          data: this.state.data
         })}
       </div>
     );

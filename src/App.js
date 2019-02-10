@@ -1,49 +1,28 @@
 import React, { Component } from "react";
-import { ReactPolling } from "./ReactPolling";
+import { HttpQuery } from "./HttpQuery";
 import "./App.css";
 
-const apiUrl = "https://pokeapi.co/api/v2/pokemon/2/";
-const STOP = "STOP";
+const apiUrl = "https://qrng.anu.edu.au/API/jsonI.php?length=1&type=uint16";
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      name: "No data yet! Start polling!",
-      imgUrl: ""
-    };
-  }
-  _updatePokemon = data => {
-    this.setState({
-      name: data.name,
-      imgUrl: data.sprites.back_default
-    });
-  };
-
   render() {
-    const { name, imgUrl } = this.state;
     return (
       <div>
-        <ReactPolling>
-          {({ startPolling, stopPolling, error, loading }) => {
+        <HttpQuery url={apiUrl} pollInterval={3000}>
+          {({ data, startPolling, stopPolling, error, loading }) => {
             if (error) return <h1>"Error!"</h1>;
-            if (loading) return <h1>"Loading..."</h1>;
             return (
               <div className="App">
-                <h1>Pokemon Poller</h1>
-                <button
-                  onClick={() => startPolling(apiUrl, this._updatePokemon)}
-                >
-                  Start Polling
-                </button>
+                <h1>Random number geneator!</h1>
+                <button onClick={startPolling}>Start polling</button>
                 <button onClick={stopPolling}>Stop Polling</button>
-                <h1>{name}</h1>
-                <img src={imgUrl} />
+                <h1>Your random number:</h1>
+                {loading && <h1>"Loading..."</h1>}
+                {data && !loading && <h1>{data.data[0]}</h1>}
               </div>
             );
           }}
-        </ReactPolling>
+        </HttpQuery>
       </div>
     );
   }
